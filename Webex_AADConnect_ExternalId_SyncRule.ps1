@@ -2,29 +2,31 @@
 #
 # AAD Connect Sync Rule Creator for Webex ExternalId
 # Written by Jeremy Willans, Cisco Systems Australia.
-# Date: 17-03-2021
+# Version: 1.0
 #
 # USE AT OWN RISK, SCRIPT NOT FULLY TESTED NOR SUPPLIED WITH ANY GURANTEE
 #
-# Parameters:
+# Usage - Adds required AAD Connect Rule to sync Azure ObjectID to On-Prem AD for Webex DirSync
+# Example - powershell -executionpolicy bypass path\to\Webex_AADConnect_ExternalId_SyncRule.ps1 <ARGUMENTS>
 #
+# Parameters:
 # -Debug (default false) - Detailed information during process
 # -Log (default aadsynrule_auditlog.txt) - Appending Transcript Log of process
 # -Attribute (default msDS-cloudExtensionAttribute1) - Define AD Attribute to contain AAD ObjectId/ExternalId
 # -Precedence (default 148) - Define unique Precedence value for AAD Sync Rule
 # -Connector (default Autodiscover) - Define GUID of AD Connector
 #
-# Usage - Adds required AAD Connect Rule to sync Azure ObjectID to On-Prem AD for Webex DirSync
-# Example - powershell -executionpolicy bypass path\to\Webex_AADConnect_ExternalId_SyncRule.ps1 <ARGUMENTS>
+# Change History
+# 1.0 20210317 Initial Release
 #
 ###
 Param (
-    [Switch]$Debug = $true,
+    [Switch]$Debug,
     [String]$Log = "$PSScriptRoot\aadsynrule_auditlog.txt",
     [String]$Attribute = "msDS-cloudExtensionAttribute1",
     [Int]$Precedence = 148,
     [String]$Connector
- )
+)
 
 # Update Debug Logging
 $DebugPreference = "SilentlyContinue"
@@ -33,22 +35,21 @@ If ($Debug) {
 }
 
 # Setup Transcript
-$ErrorActionPreference="SilentlyContinue"
+$ErrorActionPreference = "SilentlyContinue"
 Stop-Transcript | Out-Null
 $ErrorActionPreference = "Continue"
-Start-Transcript -path $Log -append
+Start-Transcript -Path $Log -Append
 
 # Clear Screen and Present Script Heading
-cls
+Clear-Host
 Write-Host
 Write-Host "AAD Connect Sync Rule for Webex ExternalId"
 
 # Locate Connector for AD
-Try
-{
+Try {
     If ($Connector -eq "") {
         Write-Debug "Attempting to find AD Connector"
-        Get-ADSyncConnector | Where Type -Match "AD" -OutVariable Connectors | Out-Null
+        Get-ADSyncConnector | Where-Object Type -Match "AD" -OutVariable Connectors | Out-Null
         If ($Connectors.Count -lt 1) {
             Write-Host "No AD Connector Found!"
             Exit 1
@@ -63,14 +64,14 @@ Try
         $Connector = $Connectors[0]
         Write-Debug "Connector Found!"
 
-    } Else {
+    }
+    Else {
 
         # Define Connector, this will fail to Catch if invalid
         $Connector = Get-ADSyncConnector -Identifier $Connector
     }
 }
-Catch
-{
+Catch {
     Write-Host "ERROR: Unable to locate connector!"
     Write-Host $Error[0]
     Exit 1
@@ -78,24 +79,21 @@ Catch
 
 # Check Precedence
 Write-Debug "Checking Precedence"
-Try
-{
-    $PrecedenceCheck = Get-ADSyncRule | Where Precedence -eq $Precedence
+Try {
+    $PrecedenceCheck = Get-ADSyncRule | Where-Object Precedence -EQ $Precedence
     If ($PrecedenceCheck.Count -ne 0) {
         Write-Host "ERROR: Precedence value of $Precedence is not unique, please define during script execution with -Precedence <Number>"
         Exit 1
     }
     Write-Debug "Precedence Unique!"
 }
-Catch
-{
+Catch {
     Write-Host "Error Checking Precedence"
     Write-Host $Error[0]
     Write-Debug $Error
     Exit 1
 
 }
-
 
 # Confirm Running as Administrator
 $IsAdmin = [bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).groups -match "S-1-5-32-544")
@@ -119,64 +117,61 @@ Write-Host
 $Ignore = Read-Host “Press ENTER to begin...”
 Write-Host
 
-Try
-{
-
+Try {
     # Create AD Sync Rule
     Write-Debug "Create AD Sync Rule"
     New-ADSyncRule  `
-    -Name 'Out to AD - User AAD ObjectId' `
-    -Description 'Maps AAD ObjectId to AD Attribute for Webex' `
-    -Direction 'Outbound' `
-    -Precedence $Precedence `
-    -PrecedenceAfter '00000000-0000-0000-0000-000000000000' `
-    -PrecedenceBefore '00000000-0000-0000-0000-000000000000' `
-    -SourceObjectType 'person' `
-    -TargetObjectType 'user' `
-    -Connector $Connector.Identifier.Guid `
-    -LinkType 'Join' `
-    -SoftDeleteExpiryInterval 0 `
-    -ImmutableTag '' `
-    -OutVariable syncRule | Out-Null
+        -Name 'Out to AD - User AAD ObjectId' `
+        -Description 'Maps AAD ObjectId to AD Attribute for Webex' `
+        -Direction 'Outbound' `
+        -Precedence $Precedence `
+        -PrecedenceAfter '00000000-0000-0000-0000-000000000000' `
+        -PrecedenceBefore '00000000-0000-0000-0000-000000000000' `
+        -SourceObjectType 'person' `
+        -TargetObjectType 'user' `
+        -Connector $Connector.Identifier.Guid `
+        -LinkType 'Join' `
+        -SoftDeleteExpiryInterval 0 `
+        -ImmutableTag '' `
+        -OutVariable syncRule | Out-Null
 
     # Create Attribute Mapping for ExternalId
     Write-Debug "Create Attribute Mapping"
     Add-ADSyncAttributeFlowMapping  `
-    -SynchronizationRule $syncRule[0] `
-    -Destination $Attribute `
-    -FlowType 'Expression' `
-    -ValueMergeType 'Update' `
-    -Expression 'Replace([cloudAnchor],"User_","")' `
-    -OutVariable syncRule | Out-Null
+        -SynchronizationRule $syncRule[0] `
+        -Destination $Attribute `
+        -FlowType 'Expression' `
+        -ValueMergeType 'Update' `
+        -Expression 'Replace([cloudAnchor],"User_","")' `
+        -OutVariable syncRule | Out-Null
 
     # Create Scope Condition
     Write-Debug "Create Scope Condition"
     New-Object  `
-    -TypeName 'Microsoft.IdentityManagement.PowerShell.ObjectModel.ScopeCondition' `
-    -ArgumentList 'sourceAnchor','','ISNOTNULL' `
-    -OutVariable condition0 | Out-Null
+        -TypeName 'Microsoft.IdentityManagement.PowerShell.ObjectModel.ScopeCondition' `
+        -ArgumentList 'sourceAnchor', '', 'ISNOTNULL' `
+        -OutVariable condition0 | Out-Null
 
     # Add Scope Condition to Rule
     Write-Debug "Scope Condition to Rule"
     Add-ADSyncScopeConditionGroup  `
-    -SynchronizationRule $syncRule[0] `
-    -ScopeConditions @($condition0[0]) `
-    -OutVariable syncRule | Out-Null 
+        -SynchronizationRule $syncRule[0] `
+        -ScopeConditions @($condition0[0]) `
+        -OutVariable syncRule | Out-Null 
 
     Write-Debug "Add Rule"
     # Add ADSync Rule
     Add-ADSyncRule  `
-    -SynchronizationRule $syncRule[0] -OutVariable NewRule | Out-Null
+        -SynchronizationRule $syncRule[0] -OutVariable NewRule | Out-Null
 
     Write-Host "Rule Created!"
 
     # Display Result
     Get-ADSyncRule  `
-    -Identifier $NewRule.Identifier
+        -Identifier $NewRule.Identifier
 
 }
-Catch
-{
+Catch {
     Write-Host "Error Encountered"
     Write-Host $Error[0]
     Write-Debug $Error
