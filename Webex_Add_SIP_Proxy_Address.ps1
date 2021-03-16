@@ -1,4 +1,4 @@
-﻿###############################
+﻿ ###############################
 #
 # AD SIP Proxy Address Updater Script
 # Written by Jeremy Willans, Cisco Systems Australia.
@@ -45,7 +45,7 @@ $ResultsFile = "$PSScriptRoot\SIPProxyResults-$date.csv"
 $ErrorActionPreference="SilentlyContinue"
 Stop-Transcript | Out-Null
 $ErrorActionPreference = "Continue"
-Start-Transcript -path $LogFile -append
+Start-Transcript -path $Log -append
 
 # Clear Screen and present script parameters
 cls
@@ -129,7 +129,7 @@ Else {
 
 # Pause before begin
 Write-Host
-Write-Host "Identified"$userList.Count"Users for Updating"
+Write-Host "Identified"$userList.Count"Group Members"
 Write-Host
 Write-Host
 $Ignore = Read-Host “Press ENTER to begin...”
@@ -296,4 +296,4 @@ Write-Host
 
 # Output Results to CSV File
 $Results | Select-Object Status,@{N='Users';E={$_.Users -Join ','}} | Export-Csv -Path $ResultsFile -NoTypeInformation
-Write-Host "Results saved in $ResultsFile"
+Write-Host "Results saved in $ResultsFile" 
