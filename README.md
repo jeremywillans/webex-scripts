@@ -8,6 +8,8 @@ The repository contains some useful scripts for supporting the Webex Platform
 - Script can be used in GPO during user login to populare the Email Address field in Webex App.
 #### Webex_Presence_Registration.ps1 
 - Script to locate and register the Office Integration DLL for Webex Presence.
+#### Webex_AADConnect_ExternalId_SyncRule.ps1 
+- Script to add a new Azure AD Connect Synchronization Rule to sync the Azure Object ID to on-prem AD allowing upload to Webex via DirSync (externalId attribute)
 
 ## Disclamer
 
