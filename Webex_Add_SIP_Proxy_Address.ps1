@@ -1,13 +1,15 @@
-﻿ ###############################
+﻿###############################
 #
 # AD SIP Proxy Address Updater Script
 # Written by Jeremy Willans, Cisco Systems Australia.
-# Date: 26-11-2020
+# Version: 1.1
 #
 # USE AT OWN RISK, SCRIPT NOT FULLY TESTED NOR SUPPLIED WITH ANY GURANTEE
 #
-# Parameters:
+# Usage - Allows you to populate AD ProxyAddress Field with the required SIP:<Email Address> for proper Presence Integration with Webex
+# Example - powershell -executionpolicy bypass path\to\Webex_Add_SIP_Proxy_Address.ps1 <ARGUMENTS>
 #
+# Parameters:
 # -Force (default false) - Changes written to Active Directory
 # -Debug (default false) - Detailed information during process
 # -Credential (default false) - Allows different credentials to be specified at runtime
@@ -16,19 +18,20 @@
 # -Log (default sipproxy_auditlog.txt) - Appending Transcript Log of process
 # -SkipTest (default false) - Allows skipping the prelim test
 #
-# Usage - Allows you to populate AD ProxyAddress Field with the required SIP:<Email Address> for proper Presence Integration with Webex
-# Example - powershell -executionpolicy bypass path\to\Webex_Add_SIP_Proxy_Address.ps1 <ARGUMENTS>
+# Change History
+# 1.0 20201126 Initial Release
+# 1.1 20210317 Formatting Changes
 #
 ###
 Param (
     [Switch]$Force,
     [Switch]$Debug,
-	[Switch]$Cedential,
+    [Switch]$Cedential,
     [Switch]$JobTitle,
     [Switch]$SkipTest,
-	[String]$Group = "Domain Users",
-	[String]$Log = "$PSScriptRoot\sipproxy_auditlog.txt"
- )
+    [String]$Group = "Domain Users",
+    [String]$Log = "$PSScriptRoot\sipproxy_auditlog.txt"
+)
 ###
 
 # Update Debug Logging
@@ -42,13 +45,13 @@ $Date = Get-Date -Format yyyy-MM-dd-hhmmss
 $ResultsFile = "$PSScriptRoot\SIPProxyResults-$date.csv"
 
 # Setup Transcript
-$ErrorActionPreference="SilentlyContinue"
+$ErrorActionPreference = "SilentlyContinue"
 Stop-Transcript | Out-Null
 $ErrorActionPreference = "Continue"
-Start-Transcript -path $Log -append
+Start-Transcript -Path $Log -Append
 
 # Clear Screen and present script parameters
-cls
+Clear-Host
 Write-Host
 Write-Host "SIP Proxy Update Script"
 Write-Host
@@ -56,7 +59,7 @@ Write-Host
 # Request proposed credentials, if required
 If ($Credential) {
     $Cred = Get-Credential -Message 'Please type your administritive credentials' -UserName (WhoAmI)
-    If ($Cred -eq $null) {
+    If (!$Cred) {
         Write-Host
         Write-Host "No Credentials specified, aborting."
         Write-Host
@@ -66,21 +69,19 @@ If ($Credential) {
 
 # Test Update AD Group Object
 If (!$SkipTest) {
-    Try 
-    {
+    Try {
         Write-Debug "Test writing Description field back to Domain Users group..."
-        If (!$Credential)
-        {
-            Get-ADGroup -Identity "Domain Users" -Properties Description | ForEach { Set-ADGroup -Identity "Domain Users" -Description $_.Description }
+        If (!$Credential) {
+            Get-ADGroup -Identity "Domain Users" -Properties Description | ForEach-Object { Set-ADGroup -Identity "Domain Users" -Description $_.Description }
         
-        } Else {
-            Get-ADGroup -Credential $Cred -Identity "Domain Users" -Properties Description | ForEach { Set-ADGroup -Identity "Domain Users" -Description $_.Description }
+        }
+        Else {
+            Get-ADGroup -Credential $Cred -Identity "Domain Users" -Properties Description | ForEach-Object { Set-ADGroup -Identity "Domain Users" -Description $_.Description }
 
         }
         Write-Debug "Test Successful."
     }
-    Catch
-    { 
+    Catch { 
         Write-Host "ERROR - Unable to update objects in AD, please check or run using -Credential to specify alternate credentials, aborting."
         Write-Host 
         Break
@@ -96,8 +97,7 @@ Try {
     # Import User List
     $userList = Get-ADGroupMember -Identity $Group
 }
-Catch
-{
+Catch {
 
     Write-Debug "$Error[0]"
     Write-Host "AD Group: '$($Group)' does not exist, only the name 'Domain Users' etc needs to be specified with -Group <name>"
@@ -120,8 +120,8 @@ Write-Host "Job Title Needed: $JobTitle"
 Write-Host 
 # Display Test Mode Status
 If (!$Force) {
-    Write-Host -NoNewLine -BackgroundColor DarkGreen "### Test Mode ENABLED ###"
-	Write-Host " (-Force to Disable)"
+    Write-Host -NoNewline -BackgroundColor DarkGreen "### Test Mode ENABLED ###"
+    Write-Host " (-Force to Disable)"
 }
 Else {
     Write-Host -BackgroundColor DarkRed "### Test Mode DISABLED ###"
@@ -132,7 +132,7 @@ Write-Host
 Write-Host "Identified"$userList.Count"Group Members"
 Write-Host
 Write-Host
-$Ignore = Read-Host “Press ENTER to begin...”
+Read-Host “Press ENTER to begin...”
 Write-Host
 
 # Prepare Output Tables
@@ -143,14 +143,14 @@ $Existing = @()
 $Failed = @()
 
 # Commence Updates
-ForEach ($userDN in $userList)
-{
+ForEach ($userDN in $userList) {
 
     # Get AD User Details
     If (!$Credential) {
-        $userDetail = Get-ADUser $userDN -Properties Name,Mail,Enabled,ProxyAddresses,Title
-    } Else {
-        $userDetail = Get-ADUser $userDN -Credential $Cred -Properties Name,Mail,Enabled,ProxyAddresses, Title
+        $userDetail = Get-ADUser $userDN -Properties Name, Mail, Enabled, ProxyAddresses, Title
+    }
+    Else {
+        $userDetail = Get-ADUser $userDN -Credential $Cred -Properties Name, Mail, Enabled, ProxyAddresses, Title
     }
 
     $User = $userDetail.Name
@@ -168,7 +168,7 @@ ForEach ($userDN in $userList)
     # Check JobTitle Switch
     If ($JobTitle) {
         Write-Debug "  $User - Job Title check enabled, checking..."
-        If ($userDetail.Title -eq $null) {
+        If (!$userDetail.Title) {
 
             # No Job Title Specified, add to skipped list
             Write-Host -BackgroundColor DarkYellow ([char]8734) -NoNewline
@@ -199,7 +199,7 @@ ForEach ($userDN in $userList)
         If ($Force) {
 
             # Add new ProxyAddress entry
-            Set-ADUser $userDN -add @{ProxyAddresses="$proxyAddress"}
+            Set-ADUser $userDN -add @{ProxyAddresses = "$proxyAddress" }
             Write-Host -BackgroundColor DarkGreen ([char]8730) -NoNewline
             Write-Host " $User - Proxy Address added... pending verification..."
 
@@ -208,9 +208,10 @@ ForEach ($userDN in $userList)
 
             # Re-get AD User Details
             If (!$Credential) {
-                $userDetail = Get-ADUser $userDN -Properties Name,Mail,Enabled,ProxyAddresses
-            } Else {
-                $userDetail = Get-ADUser $userDN -Credential $Cred -Properties Name,Mail,Enabled,ProxyAddresses
+                $userDetail = Get-ADUser $userDN -Properties Name, Mail, Enabled, ProxyAddresses
+            }
+            Else {
+                $userDetail = Get-ADUser $userDN -Credential $Cred -Properties Name, Mail, Enabled, ProxyAddresses
             }
 
             # Verify entry now exists
@@ -237,8 +238,7 @@ ForEach ($userDN in $userList)
         }    
 
     }
-    Catch                        
-    {
+    Catch {
 
         # Something went wrong, enable debug to show error
         Write-Debug "  $User - $Error[0]"
@@ -252,7 +252,7 @@ ForEach ($userDN in $userList)
 }
 
 # Enumerate all results in Table
-$FormatEnumerationLimit=-1
+$FormatEnumerationLimit = -1
 
 # Format Successful Results
 $SuccessfulRow = New-Object psobject
@@ -291,9 +291,9 @@ $Results | Format-Table | Out-String | Write-Host
 Stop-Transcript | Out-Null
 
 # Pause before Save
-$Ignore = Read-Host “Press ENTER to save results to CSV...”
+Read-Host “Press ENTER to save results to CSV...”
 Write-Host
 
 # Output Results to CSV File
-$Results | Select-Object Status,@{N='Users';E={$_.Users -Join ','}} | Export-Csv -Path $ResultsFile -NoTypeInformation
+$Results | Select-Object Status, @{N = 'Users'; E = { $_.Users -Join ',' } } | Export-Csv -Path $ResultsFile -NoTypeInformation
 Write-Host "Results saved in $ResultsFile" 

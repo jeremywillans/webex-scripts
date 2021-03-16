@@ -2,16 +2,24 @@
 #
 # Webex Presence Integration Registration Script
 # Written by Jeremy Willans, Cisco Systems Australia.
-# Date: 1-12-2020
+# Version: 1.1
 #
 # USE AT OWN RISK, SCRIPT NOT FULLY TESTED NOR SUPPLIED WITH ANY GURANTEE
 #
-# Usage (as Administrator) "powershell -executionpolicy bypass path\to\Webex_Presence_Registration.ps1"
+# Usage - Locates and registers the Webex Outlook DLL, run as Administrator
+# Example - powershell -executionpolicy bypass path\to\Webex_Presence_Registration.ps1 <ARGUMENTS>
+#
+# Parameters:
+# -Debug (default false) - Detailed information during process
+#
+# Change History
+# 1.0 20201201 Initial Release
+# 1.1 20210317 Formatting Changes
 #
 ###
 Param (
     [Switch]$Debug
- )
+)
 ###
 
 # Update Debug Logging
@@ -36,8 +44,7 @@ $User = "\AppData\Local\Programs\Cisco Spark\dependencies\spark-windows-office-i
 $Path = $null
 
 # Test DLL Paths
-While ($Path -eq $null)
-{
+While (!$Path) {
     # Test X64 Path
     If (Test-Path $Allx64 -PathType Leaf) {
         Write-Debug "MATCH - $($Allx64)"
@@ -53,7 +60,7 @@ While ($Path -eq $null)
     Write-Debug "NO MATCH - $($Allx86)"
 
     # Test Users Folders
-    $Folders = Get-ChildItem -Directory C:\Users | ForEach-Object {
+    Get-ChildItem -Directory C:\Users | ForEach-Object {
         $UserPath = "C:\Users\$($_)$($User)"
         If (Test-Path $UserPath -PathType Leaf) {
             Write-Debug "MATCH - $($UserPath)"
@@ -67,22 +74,22 @@ While ($Path -eq $null)
     Break
 }
 
-If ($Path -eq $null) {
+If (!$Path) {
     Write-Host "DLL Not Found on System, aborting."
     Write-Host
     Break
 }
 
 # Attempt Register DLL
-Try
-{
+Try {
     # Wrap Path with Quotes
     $Path = """$($Path)"""
 
     # Output Display if in Debug mode, otherwise use Silent Flag
     If ($Debug) {
         $Process = Start-Process -FilePath 'regsvr32.exe' -Args "$Path" -Wait -NoNewWindow -PassThru
-    } Else {
+    }
+    Else {
         $Process = Start-Process -FilePath 'regsvr32.exe' -Args "/s $Path" -Wait -NoNewWindow -PassThru
     }
     
@@ -91,15 +98,15 @@ Try
 
         Write-Host "SUCCESS - DLL Registered."
         Write-Host
-    } Else {
+    }
+    Else {
 
         Write-Host "FAILED to register DLL."
         Write-Host "Run with -Debug for more details"
         Write-Host
     }
 }
-Catch
-{
+Catch {
     # Failed
     Write-Host "FAILED to register DLL."
     Write-Host "Run with -Debug for more details"
