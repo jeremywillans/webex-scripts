@@ -157,7 +157,7 @@ Try {
     Add-ADSyncScopeConditionGroup  `
         -SynchronizationRule $syncRule[0] `
         -ScopeConditions @($condition0[0]) `
-        -OutVariable syncRule | Out-Null 
+        -OutVariable syncRule | Out-Null
 
     Write-Debug "Add Rule"
     # Add ADSync Rule
@@ -167,9 +167,14 @@ Try {
     Write-Host "Rule Created!"
 
     # Display Result
-    Get-ADSyncRule  `
+    If ($Debug) {
+        # Show Full Rule in Debug
+        Get-ADSyncRule  `
         -Identifier $NewRule.Identifier
-
+    } Else {
+        Get-ADSyncRule  `
+            -Identifier $NewRule.Identifier | Select-Object Identifier, Name, Description, Precedence
+    }
 }
 Catch {
     Write-Host "Error Encountered"
