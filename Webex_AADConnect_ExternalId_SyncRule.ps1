@@ -19,7 +19,7 @@
 #
 ###
 Param (
-	[Switch]$Debug = $true,
+    [Switch]$Debug = $true,
     [String]$Log = "$PSScriptRoot\aadsynrule_auditlog.txt",
     [String]$Attribute = "msDS-cloudExtensionAttribute1",
     [Int]$Precedence = 148,
@@ -48,36 +48,32 @@ Try
 {
     If ($Connector -eq "") {
         Write-Debug "Attempting to find AD Connector"
-        $Connectors = Get-ADSyncConnector | Where Type -Match "AD" #-OutVariable Connectors | Out-Null
+        Get-ADSyncConnector | Where Type -Match "AD" -OutVariable Connectors | Out-Null
         If ($Connectors.Count -lt 1) {
             Write-Host "No AD Connector Found!"
-            Break
+            Exit 1
         }
         If ($Connectors.Count -ne 1) {
             Write-Host "ERROR: Multiple AD Connectors identified, please define with script execution ( -Connector <Identifier>)"
             $Connectors | Select-Object Name, Identifier | Format-Table | Out-String | Write-Host
-            Break
+            Exit 1
         }
 
         # Set Connector
         $Connector = $Connectors[0]
-        Write-Debug "Found!"
+        Write-Debug "Connector Found!"
 
     } Else {
 
-        $Connector = Get-ADSyncConnector -Identifer $Connector
-        If ($PrecedenceCheck.Count -ne 0) {
-            Write-Host "ERROR: Invalid Connector Identifier Specified."
-            Break
-        }
+        # Define Connector, this will fail to Catch if invalid
+        $Connector = Get-ADSyncConnector -Identifier $Connector
     }
 }
 Catch
 {
     Write-Host "ERROR: Unable to locate connector!"
     Write-Host $Error[0]
-    Write-Debug $Error
-    Break
+    Exit 1
 }
 
 # Check Precedence
@@ -86,8 +82,8 @@ Try
 {
     $PrecedenceCheck = Get-ADSyncRule | Where Precedence -eq $Precedence
     If ($PrecedenceCheck.Count -ne 0) {
-        Write-Host "ERROR: Precednce is not unique, please define during script execution with -Precedence <Number>"
-        Break
+        Write-Host "ERROR: Precedence value of $Precedence is not unique, please define during script execution with -Precedence <Number>"
+        Exit 1
     }
     Write-Debug "Precedence Unique!"
 }
@@ -96,7 +92,8 @@ Catch
     Write-Host "Error Checking Precedence"
     Write-Host $Error[0]
     Write-Debug $Error
-    Break
+    Exit 1
+
 }
 
 
@@ -106,7 +103,7 @@ If (!$IsAdmin) {
     Write-Host 
     Write-Host "ERROR - Please run as Administrator, aborting."
     Write-Host 
-    Break
+    Exit 1
 }
 
 # Output options
@@ -128,8 +125,8 @@ Try
     # Create AD Sync Rule
     Write-Debug "Create AD Sync Rule"
     New-ADSyncRule  `
-    -Name 'Out to AD - User ExternalId for Webex' `
-    -Description '' `
+    -Name 'Out to AD - User AAD ObjectId' `
+    -Description 'Maps AAD ObjectId to AD Attribute for Webex' `
     -Direction 'Outbound' `
     -Precedence $Precedence `
     -PrecedenceAfter '00000000-0000-0000-0000-000000000000' `
@@ -183,4 +180,5 @@ Catch
     Write-Host "Error Encountered"
     Write-Host $Error[0]
     Write-Debug $Error
+    Exit 1
 }
