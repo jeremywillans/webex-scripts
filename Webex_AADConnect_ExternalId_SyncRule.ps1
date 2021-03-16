@@ -114,7 +114,7 @@ Write-Host
 
 # Pause before begin
 Write-Host
-$Ignore = Read-Host “Press ENTER to begin...”
+Read-Host “Press ENTER to begin...”
 Write-Host
 
 Try {
