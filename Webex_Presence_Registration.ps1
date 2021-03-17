@@ -1,7 +1,8 @@
 ###############################
 #
 # Webex Presence Integration Registration Script
-# Written by Jeremy Willans, Cisco Systems Australia.
+# Written by Jeremy Willans
+# https://github.com/jeremywillans/webex-scripts
 # Version: 1.1
 #
 # USE AT OWN RISK, SCRIPT NOT FULLY TESTED NOR SUPPLIED WITH ANY GURANTEE
