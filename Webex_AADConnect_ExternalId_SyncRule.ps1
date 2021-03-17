@@ -1,4 +1,4 @@
-################################
+ ################################
 #
 # AAD Connect Sync Rule Creator for Webex ExternalId
 # Written by Jeremy Willans
@@ -46,35 +46,39 @@ Clear-Host
 Write-Host
 Write-Host "AAD Connect Sync Rule for Webex ExternalId"
 
+$adConnector = $null
 # Locate Connector for AD
 Try {
-    If ($Connector -eq "") {
+    If (!$Connector) {
         Write-Debug "Attempting to find AD Connector"
-        Get-ADSyncConnector | Where-Object Type -Match "AD" -OutVariable Connectors | Out-Null
-        If ($Connectors.Count -lt 1) {
+        Get-ADSyncConnector | Where-Object Type -Match "AD" -OutVariable adConnectors | Out-Null
+        If ($adConnectors.Count -lt 1) {
             Write-Host "No AD Connector Found!"
             Exit 1
         }
-        If ($Connectors.Count -ne 1) {
+        If ($adConnectors.Count -ne 1) {
             Write-Host "ERROR: Multiple AD Connectors identified, please define with script execution ( -Connector <Identifier>)"
-            $Connectors | Select-Object Name, Identifier | Format-Table | Out-String | Write-Host
+            $adConnectors | Select-Object Name, Identifier | Format-Table | Out-String | Write-Host
             Exit 1
         }
 
         # Set Connector
-        $Connector = $Connectors[0]
+        $adConnector = $adConnectors[0]
         Write-Debug "Connector Found!"
 
     }
     Else {
 
+        Write-Debug "Using provided AD Connector Identifier"
         # Define Connector, this will fail to Catch if invalid
-        $Connector = Get-ADSyncConnector -Identifier $Connector
+        $adConnector = Get-ADSyncConnector -Identifier $Connector
+        Write-Debug "Connector Found!"
     }
 }
 Catch {
     Write-Host "ERROR: Unable to locate connector!"
-    Write-Host $Error[0]
+    Write-Host $_.Exception.Message
+    Write-Debug $_.Exception
     Exit 1
 }
 
@@ -90,8 +94,8 @@ Try {
 }
 Catch {
     Write-Host "Error Checking Precedence"
-    Write-Host $Error[0]
-    Write-Debug $Error
+    Write-Host $_.Exception.Message
+    Write-Debug $_.Exception
     Exit 1
 
 }
@@ -108,14 +112,14 @@ If (!$IsAdmin) {
 # Output options
 Write-Host
 Write-Host "Log File: $Log"
-Write-Host "AD Connector:"$Connector.Name
+Write-Host "AD Connector:"$adConnector.Name
 Write-Host "Destination Attribute: $Attribute"
 Write-Host "Precedence: "$Precedence
 Write-Host
 
 # Pause before begin
 Write-Host
-Read-Host “Press ENTER to begin...”
+Read-Host "Press ENTER to begin..."
 Write-Host
 
 Try {
@@ -130,7 +134,7 @@ Try {
         -PrecedenceBefore '00000000-0000-0000-0000-000000000000' `
         -SourceObjectType 'person' `
         -TargetObjectType 'user' `
-        -Connector $Connector.Identifier.Guid `
+        -Connector $adConnector.Identifier.Guid `
         -LinkType 'Join' `
         -SoftDeleteExpiryInterval 0 `
         -ImmutableTag '' `
@@ -174,12 +178,12 @@ Try {
         -Identifier $NewRule.Identifier
     } Else {
         Get-ADSyncRule  `
-            -Identifier $NewRule.Identifier | Select-Object Identifier, Name, Description, Precedence
+            -Identifier $NewRule.Identifier | Select-Object Identifier, Name, Description
     }
 }
 Catch {
     Write-Host "Error Encountered"
-    Write-Host $Error[0]
-    Write-Debug $Error
+    Write-Host $_.Exception.Message
+    Write-Debug $_.Exception
     Exit 1
-}
+} 
