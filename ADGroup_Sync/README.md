@@ -2,6 +2,8 @@
 
 This script allows synchronization of Active Directory Groups to Webex Spaces, Teams or Individual Team Spaces
 
+**Note:** Sync is perform from AD to Webex, not in reverse.
+
 ## Usage Notes
 
 You can synchronize Team Membership by mapping to the "General" space for the respective team.
