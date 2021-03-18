@@ -14,7 +14,7 @@ This script allows synchronization of Active Directory Groups to Webex Spaces
     - **Note:** RoomId is required, this can be easily obtained from the [Developer API](https://developer.webex.com/docs/api/v1/rooms/list-rooms) or by adding `astronaut@webex.bot` to the space
 5. Add the bot registered above to applicable Webex Spaces
 6. Run Script! You can use the argument -Debug to get better visibility of the process
-7. Use Windows Task Scheduler to automate exection of this script on a regular basis to keep Webex in sync
+7. Use Windows Task Scheduler to automate execution of this script on a regular basis to keep Webex in sync
 
 ## Support
 
