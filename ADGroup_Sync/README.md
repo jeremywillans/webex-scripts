@@ -1,6 +1,14 @@
 # AD Group Sync
 
-This script allows synchronization of Active Directory Groups to Webex Spaces
+This script allows synchronization of Active Directory Groups to Webex Spaces, Teams or Individual Team Spaces
+
+## Usage Notes
+
+You can synchronize Team Membership by mapping to the "General" space for the respective team.
+
+**Note:** Removal from the Team **WILL** result in removal from all Team Spaces!
+
+If you are performing sync on indivudual team spaces, please order your CSV file to process Teams (General Spaces) first to ensure that users who are meant to be part of an individual team spaces are re-added if they get removed from the Team.
 
 ## Deployment Steps
 1. Register a Bot at [Webex Developers](https://developer.webex.com/my-apps)
