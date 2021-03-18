@@ -18,7 +18,7 @@ This script allows synchronization of Active Directory Groups to Webex Spaces
 
 ## Support
 
-In case you've found a bug, please [open an issue on GitHub](../../issues).
+In case you've found a bug, please [open an issue on GitHub](../../../issues).
 
 ## Disclamer
 
