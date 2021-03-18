@@ -1,6 +1,6 @@
  ################################
 #
-# AAD Connect Sync Rule Creator for Webex ExternalId
+# AAD Connect Sync Rule Creator for Webex ExternalId (AAD ObjectId)
 # Written by Jeremy Willans
 # https://github.com/jeremywillans/webex-scripts
 # Version: 1.0

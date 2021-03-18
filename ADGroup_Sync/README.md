@@ -2,7 +2,7 @@
 
 This script allows synchronization of Active Directory Groups to Webex Spaces
 
-### Deployment Steps
+## Deployment Steps
 1. Register a Bot at [Webex Developers](https://developer.webex.com/my-apps)
 2. Download PS1 and CSV Files, intention is to run on Windows System via Task Scheduler
     - **Note:** Script must be run by an account with AD Read Permissions
