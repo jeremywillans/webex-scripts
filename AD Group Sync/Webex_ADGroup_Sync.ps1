@@ -16,7 +16,7 @@
 # Script Variables
 # WebexAuth (required) - Webex Authentication token for Bot
 # ReportId (required) - User/Space ID to send error status updates
-# ExemptUsers (optional) - Array of users to be excluded from the Sync process
+# ExemptUsers (optional) - Array of users to be excluded from the Sync removal process
 # LogDir (default $PSScriptRoot) - Appending Transcript Log of process
 # CSV (default groups.csv) - Source of AD to Webex Space Mapping
 # DaysBack (default -8) - Numbers of days to keep audit logs for
