@@ -18,7 +18,7 @@
 # ReportId (required) - User/Space ID to send error status updates
 # ExemptUsers (optional) - Array of users to be excluded from the Sync removal process
 # LogDir (default $PSScriptRoot) - Appending Transcript Log of process
-# CSV (default groups.csv) - Source of AD to Webex Space Mapping
+# CSV (default groups.csv) - Source of AD to Webex Space Mapping (using RoomId)
 # DaysBack (default -8) - Numbers of days to keep audit logs for
 #
 # Change History
