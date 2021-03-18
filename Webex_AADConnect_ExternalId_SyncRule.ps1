@@ -186,4 +186,7 @@ Catch {
     Write-Host $_.Exception.Message
     Write-Debug $_.Exception
     Exit 1
-} 
+}
+
+# Stop Transcript
+Stop-Transcript | Out-Null
