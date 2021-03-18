@@ -10,6 +10,8 @@ The repository contains some useful scripts for supporting the Webex Platform
 - Script to locate and register the Office Integration DLL for Webex Presence.
 #### Webex_AADConnect_ExternalId_SyncRule.ps1 
 - Script to add a new Azure AD Connect Synchronization Rule to sync the Azure Object ID to on-prem AD allowing upload to Webex via DirSync (externalId attribute)
+#### Webex_ADGroup_Sync.ps1
+- Script that allows sync of Active Directory Groups to Webex Spaces
 
 ## Disclamer
 
