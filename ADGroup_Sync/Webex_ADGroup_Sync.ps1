@@ -3,7 +3,7 @@
 # AD Group Sync for Webex
 # Written by Jeremy Willans
 # https://github.com/jeremywillans/webex-scripts
-# Version: 1.0
+# Version: 1.1
 #
 # USE AT OWN RISK, SCRIPT NOT FULLY TESTED NOR SUPPLIED WITH ANY GURANTEE
 #
@@ -23,6 +23,9 @@
 #
 # Change History
 # 1.0 20210318 Initial Release
+# 1.1 20210629 Adds Support for FollowRelLink (Large Spaces) and convert to Markdown
+#
+# NOTE: This requires Powershell 7 to function
 #
 ###
 Param (
@@ -30,8 +33,15 @@ Param (
 )
 ###
 
-$WebexAuth = " << BOT TOKEN >>"
-$ReportId = ""
+If ($PSVersionTable.PSVersion.Major -lt 7) {
+    Write-Output "This script requires Powershell Version 7+"
+    Write-Output ""
+    Exit 1
+}
+
+
+$WebexAuth = " << BOT TOKEN >> "
+$ReportId = " << DEBUG SPACE/PERSON ID >> "
 $ExemptUsers = @('') # @('user1@example.com','user2@example.com','user3@example.com')
 $LogDir = "$PSScriptRoot\Logs"
 $CSV = "$PSScriptRoot\groups.csv"
@@ -82,7 +92,8 @@ Try {
 }
 Catch {
     Write-Output "ERR: Bot Invalid, aborting..."
-    Write-Output 
+    Write-Debug $_.Exception.Message
+    Write-Output ""
     Exit 1
 }
 
@@ -148,7 +159,7 @@ ForEach ($Item in $GroupList) {
     }
 
     # Get Webex Users
-    $Result = Invoke-RestMethod -Headers $Headers -Uri https://webexapis.com/v1/memberships?roomId=$WebexSpace 
+    $Result = Invoke-RestMethod -Headers $Headers -FollowRelLink -Uri https://webexapis.com/v1/memberships?max=1000"&"roomId=$WebexSpace 
 
     # Add Users to Array
     ForEach ($Item in $Result.items) {
@@ -164,7 +175,7 @@ ForEach ($Item in $GroupList) {
 
     Try {
         # Get AD Group Members
-        Get-ADGroupMember -Identity $ADGroup -Recursive | Get-ADUser -Property DisplayName, mail -OutVariable ADUsers | Out-Null
+        $ADUsers = Get-ADGroupMember -Identity $ADGroup -Recursive | ForEach-Object { Get-ADUser -Identity $_.DistinguishedName }
     }
     Catch {
         Write-Output "[$ADGroup] Unable to get group status"
@@ -178,14 +189,14 @@ ForEach ($Item in $GroupList) {
     ForEach ($User in $ADUsers) {
 
         # Check for User Email
-        If (!$User.mail) {
+        If (!$User.Mail) {
             Write-Debug "[$ADGroup] $User does not have an Email address"
             $ErrorResult += "[$ADGroup] $User does not have an Email address"
             Continue
         }
 
         # Select User Mail Attribute
-        $UserMail = $User.mail
+        $UserMail = $User.Mail
         
         # Create List of AD Users
         $ADUserList += $UserMail
@@ -263,7 +274,7 @@ If ($ErrorResult.Count -ne 0) {
     }
     Else {
         # Format Message
-        $Html = ("<strong>AD Group Sync Report</strong><blockquote class=danger>" + $ErrorResult)
+        $Markdown = ("**AD Group Sync Report**<blockquote class=danger>" + ($ErrorResult -join '\n'))
 
         Try {
             # Test if ReportId is a spaceId
@@ -271,7 +282,7 @@ If ($ErrorResult.Count -ne 0) {
             $Result = Invoke-RestMethod -Headers $Headers -Uri https://webexapis.com/v1/memberships?roomId=$ReportId
             # If didnt error, post message
             Write-Debug "Posting message to Space"
-            $Body = @{"roomId" = "$ReportId"; "html" = $Html } | ConvertTo-Json
+            $Body = @{"roomId" = $ReportId; "markdown" = $Markdown } | ConvertTo-Json | ForEach-Object { [System.Text.RegularExpressions.Regex]::Unescape($_) }
             $Result = Invoke-RestMethod -Method Post -Headers $Headers -Uri https://webexapis.com/v1/messages -Body $Body
         }
         Catch {
@@ -281,7 +292,7 @@ If ($ErrorResult.Count -ne 0) {
 
                 $Result = Invoke-RestMethod -Headers $Headers -Uri https://webexapis.com/v1/people/$ReportId
                 Write-Debug "Posting direct message"
-                $Body = @{"toPersonId" = "$ReportId"; "html" = $Html } | ConvertTo-Json
+                $Body = @{"toPersonId" =  $ReportId; "markdown" = $Markdown } | ConvertTo-Json | ForEach-Object { [System.Text.RegularExpressions.Regex]::Unescape($_) }
                 $Result = Invoke-RestMethod -Method Post -Headers $Headers -Uri https://webexapis.com/v1/messages -Body $Body
             }
             Catch {
