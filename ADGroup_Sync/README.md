@@ -10,9 +10,11 @@ You can synchronize Team Membership by mapping to the "General" space for the re
 
 **Note:** Removal from the Team **WILL** result in removal from all Team Spaces!
 
-If you are performing sync on indivudual team spaces, please order your CSV file to process Teams (General Spaces) first to ensure that users who are meant to be part of an individual team spaces are re-added if they get removed from the Team.
+If you are performing sync on individual team spaces, please order your CSV file to process Teams (General Spaces) first to ensure that users who are meant to be part of an individual team spaces are re-added if they get removed from the Team.
 
 ## Deployment Steps
+**NOTE:** This now requires Powershell 7+ to function, along with a supported RSAT version for Active Directory compatibility with PS7
+
 1. Register a Bot at [Webex Developers](https://developer.webex.com/my-apps)
 2. Download PS1 and CSV Files, intention is to run on Windows System via Task Scheduler
     - **Note:** Script must be run by an account with AD Read Permissions
@@ -30,6 +32,6 @@ If you are performing sync on indivudual team spaces, please order your CSV file
 
 In case you've found a bug, please [open an issue on GitHub](../../../issues).
 
-## Disclamer
+## Disclaimer
 
 This script is NOT guaranteed to be bug free and production quality.
