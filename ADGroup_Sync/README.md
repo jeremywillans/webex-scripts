@@ -20,10 +20,12 @@ If you are performing sync on individual team spaces, please order your CSV file
     - **Note:** Script must be run by an account with AD Read Permissions
 3. Edit Script and update the following variables
     - WebexAuth (required) - Webex Authentication token for Bot (registered in Step 1)
-    - ReportId (optional) - UserId or RoomId to send error status updates
+    - ReportId (optional) - Person Id or Room Id to send error status updates
     - ExemptUsers (optional) - Array of users to be excluded from the Sync **removal** process
-4. Update CSV File with AD Group to Webex Space details
-    - **Note:** RoomId is required, this can be easily obtained from the [Developer API](https://developer.webex.com/docs/api/v1/rooms/list-rooms) or by adding `astronaut@webex.bot` to the space
+4. Update CSV File with AD Group to Webex Space details, these example methods can be used to get the Room Id
+    - Using the [List Rooms](https://developer.webex.com/docs/api/v1/rooms/list-rooms) Developer API
+    - Adding `astronaut@webex.bot` to the space (bot will leave and 1:1 you the Id)
+    - 1:1 Message `astronaut@webex.bot`, with an @Mention of the Space name
 5. Add the bot registered above to applicable Webex Spaces
 6. Run Script! You can use the argument -Debug to get better visibility of the process
 7. Use Windows Task Scheduler to automate execution of this script on a regular basis to keep Webex in sync
