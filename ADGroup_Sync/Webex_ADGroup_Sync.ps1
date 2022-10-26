@@ -3,7 +3,7 @@
 # AD Group Sync for Webex
 # Written by Jeremy Willans
 # https://github.com/jeremywillans/webex-scripts
-# Version: 1.1
+# Version: 1.2
 #
 # USE AT OWN RISK, SCRIPT NOT FULLY TESTED NOR SUPPLIED WITH ANY GURANTEE
 #
@@ -24,6 +24,7 @@
 # Change History
 # 1.0 20210318 Initial Release
 # 1.1 20210629 Adds Support for FollowRelLink (Large Spaces) and convert to Markdown
+# 1.2 20221026 Improve AD Error Handling, explicitly include Mail attribute and formatting fixes
 #
 # NOTE: This requires Powershell 7 to function
 #
@@ -175,7 +176,7 @@ ForEach ($Item in $GroupList) {
 
     Try {
         # Get AD Group Members
-        $ADUsers = Get-ADGroupMember -Identity $ADGroup -Recursive | ForEach-Object { Get-ADUser -Identity $_.DistinguishedName }
+        $ADUsers = Get-ADGroupMember -Identity $ADGroup -Recursive -ErrorAction Stop | ForEach-Object { Get-ADUser -Identity $_.DistinguishedName -Properties 'Mail' -ErrorAction Stop }
     }
     Catch {
         Write-Output "[$ADGroup] Unable to get group status"
@@ -274,7 +275,7 @@ If ($ErrorResult.Count -ne 0) {
     }
     Else {
         # Format Message
-        $Markdown = ("**AD Group Sync Report**<blockquote class=danger>" + ($ErrorResult -join '\n'))
+        $Markdown = ("**AD Group Sync Report**<blockquote class=danger>" + ($ErrorResult -join '\n') + "</blockquote>")
 
         Try {
             # Test if ReportId is a spaceId
@@ -297,7 +298,7 @@ If ($ErrorResult.Count -ne 0) {
             }
             Catch {
                 Write-Output "Unable to send output report"
-                Write-Debug (" Error Message: " + $_.Exception.Message)
+                Write-Debug ("Error Message: " + $_.Exception.Message)
             }
         }
     } 
