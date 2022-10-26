@@ -275,7 +275,7 @@ If ($ErrorResult.Count -ne 0) {
     }
     Else {
         # Format Message
-        $Markdown = ("**AD Group Sync Report**<blockquote class=danger>" + ($ErrorResult -join '\n') + "</blockquote>")
+        $Html = ("<strong>AD Group Sync Report</strong><blockquote class=danger>" + ($ErrorResult -join '\n') + "</blockquote>")
 
         Try {
             # Test if ReportId is a spaceId
@@ -283,7 +283,7 @@ If ($ErrorResult.Count -ne 0) {
             $Result = Invoke-RestMethod -Headers $Headers -Uri https://webexapis.com/v1/memberships?roomId=$ReportId
             # If didnt error, post message
             Write-Debug "Posting message to Space"
-            $Body = @{"roomId" = $ReportId; "markdown" = $Markdown } | ConvertTo-Json | ForEach-Object { [System.Text.RegularExpressions.Regex]::Unescape($_) }
+            $Body = @{"roomId" = $ReportId; "html" = $Html } | ConvertTo-Json | ForEach-Object { [System.Text.RegularExpressions.Regex]::Unescape($_) }
             $Result = Invoke-RestMethod -Method Post -Headers $Headers -Uri https://webexapis.com/v1/messages -Body $Body
         }
         Catch {
@@ -293,7 +293,7 @@ If ($ErrorResult.Count -ne 0) {
 
                 $Result = Invoke-RestMethod -Headers $Headers -Uri https://webexapis.com/v1/people/$ReportId
                 Write-Debug "Posting direct message"
-                $Body = @{"toPersonId" =  $ReportId; "markdown" = $Markdown } | ConvertTo-Json | ForEach-Object { [System.Text.RegularExpressions.Regex]::Unescape($_) }
+                $Body = @{"toPersonId" =  $ReportId; "html" = $Html } | ConvertTo-Json | ForEach-Object { [System.Text.RegularExpressions.Regex]::Unescape($_) }
                 $Result = Invoke-RestMethod -Method Post -Headers $Headers -Uri https://webexapis.com/v1/messages -Body $Body
             }
             Catch {
